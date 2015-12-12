@@ -15,7 +15,7 @@
 
     <EditText
         android:layout_width="fill_parent"
-        android:layout_height="200dp"
+        android:layout_height="160dp"
         android:id="@+id/etCompose"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
@@ -26,7 +26,22 @@
         android:textSize="18sp"
         android:linksClickable="false"
         android:minLines="6"
-        android:gravity="top|left"/>
+        android:gravity="top|left"
+        android:maxLength="140"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/tvCharCount"
+        android:layout_alignTop="@+id/btnCompose"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:textSize="14sp"
+        android:text="140"
+        android:layout_alignBottom="@+id/btnCompose"
+        android:layout_toLeftOf="@+id/btnCompose"
+        android:layout_toStartOf="@+id/btnCompose"
+        android:gravity="center_vertical"/>
 
     <Button
         android:layout_width="wrap_content"
@@ -36,5 +51,6 @@
         android:layout_below="@+id/etCompose"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
-        android:onClick="onSubmit"/>
+        android:onClick="onSubmit"
+        style="@style/Base.Widget.AppCompat.Button"/>
 </RelativeLayout>

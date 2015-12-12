@@ -1,6 +1,9 @@
 package com.codepath.apps.mysimpletweets;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -34,6 +37,7 @@ public class TimelineActivity extends AppCompatActivity {
         setContentView(R.layout.activity_timeline);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        isNetworkAvailable();
         //Find the listview
         lvTweets = (ListView) findViewById(R.id.lvTweets);
         // Create the arraylist (data source)
@@ -54,7 +58,6 @@ public class TimelineActivity extends AppCompatActivity {
             // Success
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray json) {
-                Log.d("DEBUG", json.toString());
                 aTweets.addAll(Tweet.fromJSONArray(json));
             }
 
@@ -86,22 +89,29 @@ public class TimelineActivity extends AppCompatActivity {
         }
     }
 
+    // Check network connectivity
+    private Boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnectedOrConnecting();
+    }
+
     // Launch Compose Message View
     public void launchComposeView() {
-        Intent i = new Intent(this, ComposeActivity.class);
+        Intent i = new Intent(TimelineActivity.this, ComposeActivity.class);
         i.putExtra("mode", 2);
         startActivityForResult(i, REQUEST_CODE);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        // REQUEST_CODE is defined above
         if (resultCode == RESULT_OK && requestCode == REQUEST_CODE) {
-            // Extract name value from result extras
-            String text = data.getExtras().getString("text");
-            int code = data.getExtras().getInt("code", 0);
-            // Toast the name to display temporarily on screen
-            Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
+            Log.d("DEBUG", "Returned onActivityResult");
+            Tweet t = (Tweet) data.getParcelableExtra("newTweet");
+            Toast.makeText(this, t.getBody(), Toast.LENGTH_SHORT).show();
+//            tweets.add(t);
+//            aTweets.notifyDataSetChanged();
         }
     }
 }
