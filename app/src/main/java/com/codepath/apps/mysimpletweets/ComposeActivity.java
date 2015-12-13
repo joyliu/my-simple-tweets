@@ -27,7 +27,7 @@ public class ComposeActivity extends AppCompatActivity {
     private EditText etCompose;
     private TextView tvCharCount;
     private String status;
-    private Tweet newTweet;
+    private Tweet newTweet = new Tweet();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,16 +42,11 @@ public class ComposeActivity extends AppCompatActivity {
         etCompose = (EditText) findViewById(R.id.etCompose);
         tvCharCount = (TextView) findViewById(R.id.tvCharCount);
         charCount();
-        newTweet = new Tweet();
     }
 
     public void onSubmit(View view) {
         status = etCompose.getText().toString();
         postTweet();
-        Intent data = new Intent();
-        data.putExtra("newTweet", newTweet);
-        setResult(RESULT_OK, data);
-        finish();
     }
 
     private void charCount() {
@@ -91,15 +86,22 @@ public class ComposeActivity extends AppCompatActivity {
     // Send an API request to post the status json
     private void postTweet() {
         client.composeTweet(status, new JsonHttpResponseHandler() {
+            // Success
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                 newTweet = Tweet.fromJSON(response);
+
+                Intent data = new Intent();
+                data.putExtra("newTweet", newTweet);
+                setResult(RESULT_OK, data);
+                finish();
             }
 
             // Failure
             @Override
             public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
                 Log.d("DEBUG", errorResponse.toString());
-            }        });
+            }
+        });
     }
 }

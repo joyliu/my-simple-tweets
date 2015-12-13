@@ -11,7 +11,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.codepath.apps.mysimpletweets.models.Tweet;
 import com.loopj.android.http.JsonHttpResponseHandler;
@@ -108,10 +107,9 @@ public class TimelineActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_OK && requestCode == REQUEST_CODE) {
             Log.d("DEBUG", "Returned onActivityResult");
-            Tweet t = (Tweet) data.getParcelableExtra("newTweet");
-            Toast.makeText(this, t.getBody(), Toast.LENGTH_SHORT).show();
-//            tweets.add(t);
-//            aTweets.notifyDataSetChanged();
+            Tweet t = data.getParcelableExtra("newTweet");
+            tweets.add(0, t);
+            aTweets.notifyDataSetChanged();
         }
     }
 }
