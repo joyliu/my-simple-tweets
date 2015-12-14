@@ -54,4 +54,15 @@ public class TwitterClient extends OAuthBaseClient {
         getClient().post(apiUrl, params, handler);
 
     }
+
+    // GET MORE STATUSES FROM HOME / INFINITE SCROLLING
+    public void getMoreStatus(int offset, long tweet_id, AsyncHttpResponseHandler handler) {
+        String apiUrl = getApiUrl("statuses/home_timeline.json");
+        //Specify the params
+        RequestParams params = new RequestParams();
+        params.put("count", offset);
+        params.put("max_id", tweet_id);
+        //Execute the request
+        getClient().get(apiUrl, params, handler);
+    }
 }

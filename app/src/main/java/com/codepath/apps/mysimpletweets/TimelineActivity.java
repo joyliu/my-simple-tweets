@@ -27,6 +27,8 @@ public class TimelineActivity extends AppCompatActivity {
     private ArrayList<Tweet> tweets;
     private TweetsArrayAdapter aTweets;
     private ListView lvTweets;
+    private long sinceId;
+    private long maxId;
 
     private final int REQUEST_CODE = 20;
 
@@ -36,9 +38,23 @@ public class TimelineActivity extends AppCompatActivity {
         setContentView(R.layout.activity_timeline);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        toolbar.setLogo(R.drawable.ic_twitter);
         isNetworkAvailable();
         //Find the listview
         lvTweets = (ListView) findViewById(R.id.lvTweets);
+        // Attach the listener to the AdapterView onCreate
+        lvTweets.setOnScrollListener(new EndlessScrollListener() {
+            @Override
+            public boolean onLoadMore(int page, int totalItemsCount) {
+                // Triggered only when new data needs to be appended to the list
+                // Add whatever code is needed to append new items to your AdapterView
+//                customLoadMoreDataFromApi(page);
+                customLoadMoreDataFromApi(totalItemsCount);
+                return true; // ONLY if more data is actually being loaded; false otherwise.
+            }
+        });
+
         // Create the arraylist (data source)
         tweets = new ArrayList<>();
         // Construct the adapter from data source
@@ -58,6 +74,11 @@ public class TimelineActivity extends AppCompatActivity {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray json) {
                 aTweets.addAll(Tweet.fromJSONArray(json));
+
+                Tweet e1 = tweets.get(0);
+                getSinceId(e1);
+                Tweet e2 = tweets.get(tweets.size() - 1);
+                getMaxId(e2);
             }
 
             // Failure
@@ -68,24 +89,43 @@ public class TimelineActivity extends AppCompatActivity {
         });
     }
 
-    // Action Bar
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_timeline, menu);
-        return true;
+    // Get the last displayed tweet ID
+    public long getMaxId(Tweet tweet) {
+        maxId = tweet.getUid();
+        return maxId;
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle presses on the action bar items
-        switch (item.getItemId()) {
-            case R.id.miCompose:
-                launchComposeView();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
+    public long getSinceId(Tweet tweet) {
+        sinceId = tweet.getUid();
+        return sinceId;
+    }
+
+    // Append more data into the adapter
+    public void customLoadMoreDataFromApi(int offset) {
+        // This method probably sends out a network request and appends new data items to your adapter.
+        // Use the offset value and add it as a parameter to your API request to retrieve paginated data.
+        // Deserialize API response and then construct new objects to append to the adapter
+        long tweetId = maxId;
+
+        client.getMoreStatus(offset, tweetId, new JsonHttpResponseHandler() {
+            // Success
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONArray json) {
+                Log.d("DEBUG", "Get more statuses");
+                aTweets.addAll(Tweet.fromJSONArray(json));
+
+                Tweet e1 = tweets.get(0);
+                getSinceId(e1);
+                Tweet e2 = tweets.get(tweets.size() - 1);
+                getMaxId(e2);
+            }
+
+            // Failure
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                Log.d("DEBUG", errorResponse.toString());
+            }
+        });
     }
 
     // Check network connectivity
@@ -110,6 +150,26 @@ public class TimelineActivity extends AppCompatActivity {
             Tweet t = data.getParcelableExtra("newTweet");
             tweets.add(0, t);
             aTweets.notifyDataSetChanged();
+        }
+    }
+
+    // Action Bar
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_timeline, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle presses on the action bar items
+        switch (item.getItemId()) {
+            case R.id.miCompose:
+                launchComposeView();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 }
