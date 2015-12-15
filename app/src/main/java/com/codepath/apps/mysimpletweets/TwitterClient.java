@@ -35,7 +35,7 @@ public class TwitterClient extends OAuthBaseClient {
 
 	// DEFINE METHODS for different API endpoints here
 	// GET HOME TIMELINE
-	public void getHomeTimeline(AsyncHttpResponseHandler handler) {
+	public void getHomeTimeline(int page, AsyncHttpResponseHandler handler) {
         String apiUrl = getApiUrl("statuses/home_timeline.json");
         //Specify the params
         RequestParams params = new RequestParams();
@@ -50,7 +50,6 @@ public class TwitterClient extends OAuthBaseClient {
         String apiUrl = getApiUrl("statuses/update.json");
         RequestParams params = new RequestParams();
         params.put("status", tweet);
-        //Execute request
         getClient().post(apiUrl, params, handler);
 
     }

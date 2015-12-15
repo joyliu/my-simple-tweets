@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -26,7 +27,10 @@ public class TimelineActivity extends AppCompatActivity {
     private TwitterClient client;
     private ArrayList<Tweet> tweets;
     private TweetsArrayAdapter aTweets;
+
+    private SwipeRefreshLayout swipeContainer;
     private ListView lvTweets;
+
     private long sinceId;
     private long maxId;
 
@@ -41,6 +45,20 @@ public class TimelineActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         toolbar.setLogo(R.drawable.ic_twitter);
         isNetworkAvailable();
+
+        swipeContainer = (SwipeRefreshLayout) findViewById(R.id.swipeContainer);
+        // Setup refresh listener which triggers new data loading
+        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                // Your code to refresh the list here.
+                // Make sure you call swipeContainer.setRefreshing(false)
+                // once the network request has completed successfully.
+                fetchTimelineAsync(0);
+            }
+        });
+
+
         //Find the listview
         lvTweets = (ListView) findViewById(R.id.lvTweets);
         // Attach the listener to the AdapterView onCreate
@@ -49,8 +67,8 @@ public class TimelineActivity extends AppCompatActivity {
             public boolean onLoadMore(int page, int totalItemsCount) {
                 // Triggered only when new data needs to be appended to the list
                 // Add whatever code is needed to append new items to your AdapterView
-//                customLoadMoreDataFromApi(page);
-                customLoadMoreDataFromApi(totalItemsCount);
+                customLoadMoreDataFromApi(page);
+                // customLoadMoreDataFromApi(totalItemsCount);
                 return true; // ONLY if more data is actually being loaded; false otherwise.
             }
         });
@@ -63,13 +81,48 @@ public class TimelineActivity extends AppCompatActivity {
         lvTweets.setAdapter(aTweets);
         // Get the client
         client = TwitterApplication.getRestClient(); // singleton client
+
         populateTimeline();
+
+        // Configure the refreshing colors
+        swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
+                android.R.color.holo_green_light,
+                android.R.color.holo_orange_light,
+                android.R.color.holo_red_light);
+
     }
+
+    public void fetchTimelineAsync(int page) {
+        client.getHomeTimeline(0, new JsonHttpResponseHandler() {
+            // Success
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONArray json) {
+                aTweets.clear();
+                aTweets.addAll(Tweet.fromJSONArray(json));
+
+                Tweet e1 = tweets.get(0);
+                getSinceId(e1);
+                Tweet e2 = tweets.get(tweets.size() - 1);
+                getMaxId(e2);
+
+                // Now we call setRefreshing(false) to signal refresh has finished
+                swipeContainer.setRefreshing(false);
+
+            }
+
+            // Failure
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                Log.d("DEBUG", errorResponse.toString());
+            }
+        });
+    }
+
 
     // Send an API request to get the timeline json
     // Fill the listview by creating the tweet objects from the json
     private void populateTimeline() {
-        client.getHomeTimeline(new JsonHttpResponseHandler() {
+        client.getHomeTimeline(0, new JsonHttpResponseHandler() {
             // Success
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray json) {
