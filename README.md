@@ -36,7 +36,7 @@ The following **bonus** features are implemented:
 
 The following **additional** features are implemented:
 
-* [x] Using Parcelable to pass objects!!!
+* [x] Using Parcelable to pass objects
 
 ## Video Walkthrough 
 
